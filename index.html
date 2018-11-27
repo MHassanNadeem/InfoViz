@@ -21,8 +21,8 @@
 
 
 // Set the dimensions of the canvas / graph
-var margin = {top: 30, right: 20, bottom: 30, left: 50},
-    width = 600 - margin.left - margin.right,
+var margin = {top: 30, right: 30, bottom: 30, left: 30},
+    width = 500 - margin.left - margin.right,
     height = 600 - margin.top - margin.bottom;
 
 var x = d3.scaleLinear().range([0, width]);
@@ -43,6 +43,14 @@ y.domain( [-10, +10] );
     // y.domain([0, d3.max(data, function(d) { return d.close; })]);
 
 
+function mapX(p){
+    return x(p)
+}
+
+function mapY(p){
+    return y(p)
+}
+
 // D3 code can go here ...
 // var svg = d3.select("svg");
 
@@ -57,44 +65,80 @@ var svg = d3.select("body")
 
 console.log(y)
 
+String.prototype.format = function() {
+    var formatted = this;
+    for (var i = 0; i < arguments.length; i++) {
+        var regexp = new RegExp('\\{'+i+'\\}', 'gi');
+        formatted = formatted.replace(regexp, arguments[i]);
+    }
+    return formatted;
+};
+
 function getPolyLine(a,b,c,d){
-    // return "0,100 50,25 50,75 100,0"
-    return "0,{0} 0,{0} 0,{0} 0,{0}".format()
+    coor = [
+        [0, a],
+        [b, 0],
+        [0, -c],
+        [-d, 0],
+        [0, a]
+    ]
+
+    line = '';
+    for(var i=0; i<coor.length; i++){
+        line += mapX(coor[i][0]) + ',' + mapY(coor[i][1]) + ' '
+    }
+
+    return line
 }
 
-// var lineFunction = d3.svg.line()
-//                          .x(function(d) { return d.x; })
-//                          .y(function(d) { return d.y; })
-//                          .interpolate("linear");
-
-
-d3.csv("data.csv").then(
+d3.csv("SimplifiedDataset.csv").then(
+// d3.csv("data.csv").then(
     function(data){
         console.log(data);
+
+        y_min = -d3.max(data, d => +d.Deccel_Measure)
+        y_max = d3.max(data, d =>  +d.Accel_Measure)
+        y_abs = Math.max( Math.abs(y_min), Math.abs(y_max) )
+        y.domain([-y_abs, y_abs])
+
+        x_min = -d3.max(data, d => +d.LatNeg_Measure)
+        x_max = d3.max(data, d =>  +d.LatPos_Measure)
+        x_abs = Math.max( Math.abs(x_min), Math.abs(x_max) )
+        x.domain([-x_abs, x_abs])
+
+        console.log( -d3.max(data, d => +d.Deccel_Measure) )
+        console.log( d3.max(data, d =>  +d.Accel_Measure) )
 
         // Scale the range of the data
         // x.domain(d3.extent(data, function(d) { return d.CollegeGrad; }));
         // y.domain([0, d3.max(data, function(d) { return d.close; })]);
 
-        // svg.append("g").
-        svg.append("polyline")
-            .attr("points", getPolyLine(10,10,10,10))
-            .attr("fill", "none")
-            .attr("stroke", 'black')
-
-        svg.append("polyline")
-            .attr("points", getPolyLine(5,5,5,5))
-            .attr("fill", "none")
-            .attr("stroke", 'black')
-
         // svg.append("polyline")
-        //     .attr("points", "0,100 50,25 50,75 100,0")
+        //     .attr("points", getPolyLine(10,10,10,10))
         //     .attr("fill", "none")
         //     .attr("stroke", 'black')
 
-    // svg.append("path")
-        // .attr("class", "line")
-        // .attr("d", lineFunction(data));
+        svg.selectAll("polyline")
+        .data(data)
+        .enter()
+        .append("polyline")
+            .attr("points", data => getPolyLine(+data.Accel_Measure, +data.LatPos_Measure, +data.Deccel_Measure, +data.LatNeg_Measure))
+            .attr("fill", "none")
+            .attr("stroke", 'black')
+            .attr('opacity', 0.1)
+
+    //             svg.selectAll("dot")
+    //     .data(data)
+    //   .enter().append("circle")
+    //     .attr("r", 3.5)
+    //     .attr("cx", d => mapX(d.Accel_Measure))
+    //     .attr("cy", d => mapX(d.Accel_Measure));
+
+
+        // svg.append("circle")
+        //     .attr("r", 5)
+        //     .attr("cx", mapX( 0 ))
+        //     .attr("cy", mapY( -6 ));
 
         // Add the X Axis
         svg.append("g")
