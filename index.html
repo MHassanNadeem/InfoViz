@@ -63,8 +63,6 @@ var svg = d3.select("body")
         .attr("transform", 
               "translate(" + margin.left + "," + margin.top + ")");
 
-console.log(y)
-
 String.prototype.format = function() {
     var formatted = this;
     for (var i = 0; i < arguments.length; i++) {
@@ -91,7 +89,7 @@ function getPolyLine(a,b,c,d){
     return line
 }
 
-d3.csv("SimplifiedDataset.csv").then(
+d3.csv("data_full.csv").then(
 // d3.csv("data.csv").then(
     function(data){
         console.log(data);
@@ -126,6 +124,22 @@ d3.csv("SimplifiedDataset.csv").then(
             .attr("fill", "none")
             .attr("stroke", 'black')
             .attr('opacity', 0.1)
+            .attr('stroke-width', 0.5)
+			.on('mouseover', function(node){
+                console.log('Mouse Over')
+                d3.select(this)
+                .attr("stroke", 'red')
+                .attr('opacity', 0.5)
+                .attr('stroke-width', 1)
+				// d3.select(this).classed("highlight", true);
+				// d3.select("#detail").html(node.Born)
+            })
+			.on('mouseout', function(node){
+                d3.select(this)
+                .attr("stroke", 'black')
+                .attr('opacity', 0.1)
+                .attr('stroke-width', 0.5)
+			})
 
     //             svg.selectAll("dot")
     //     .data(data)
