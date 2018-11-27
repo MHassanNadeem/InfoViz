@@ -1,0 +1,116 @@
+<!-- https://github.com/d3/d3/blob/master/CHANGES.md -->
+
+<!DOCTYPE html> 
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+	<title>D3 Template</title>
+	<script src="https://d3js.org/d3.v5.min.js"></script>
+	<style type="text/css">
+        .highlight{
+            fill: red;
+        }
+	</style>
+</head>
+<body>
+	<!-- <svg width="600" height="600" style="border:1px solid black">
+        <text x="10" y="20" id="detail">Hello World!</text>
+	</svg> -->
+	
+<script type="text/javascript">
+
+
+// Set the dimensions of the canvas / graph
+var margin = {top: 30, right: 20, bottom: 30, left: 50},
+    width = 600 - margin.left - margin.right,
+    height = 600 - margin.top - margin.bottom;
+
+var x = d3.scaleLinear().range([0, width]);
+var y = d3.scaleLinear().range([height, 0]);
+
+// Define the axes
+// var xAxis = d3.svg.axis().scale(x)
+    // .orient("bottom").ticks(5);
+// var yAxis = d3.svg.axis().scale(y)
+//     .orient("left").ticks(5);
+
+var xAxis = d3.axisBottom(x).ticks(10);
+var yAxis = d3.axisLeft(y).ticks(10);
+
+
+x.domain( [-10, +10] );
+y.domain( [-10, +10] );
+    // y.domain([0, d3.max(data, function(d) { return d.close; })]);
+
+
+// D3 code can go here ...
+// var svg = d3.select("svg");
+
+var svg = d3.select("body")
+    .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .attr("style", "border:1px solid black")
+    .append("g")
+        .attr("transform", 
+              "translate(" + margin.left + "," + margin.top + ")");
+
+console.log(y)
+
+function getPolyLine(a,b,c,d){
+    // return "0,100 50,25 50,75 100,0"
+    return "0,{0} 0,{0} 0,{0} 0,{0}".format()
+}
+
+// var lineFunction = d3.svg.line()
+//                          .x(function(d) { return d.x; })
+//                          .y(function(d) { return d.y; })
+//                          .interpolate("linear");
+
+
+d3.csv("data.csv").then(
+    function(data){
+        console.log(data);
+
+        // Scale the range of the data
+        // x.domain(d3.extent(data, function(d) { return d.CollegeGrad; }));
+        // y.domain([0, d3.max(data, function(d) { return d.close; })]);
+
+        // svg.append("g").
+        svg.append("polyline")
+            .attr("points", getPolyLine(10,10,10,10))
+            .attr("fill", "none")
+            .attr("stroke", 'black')
+
+        svg.append("polyline")
+            .attr("points", getPolyLine(5,5,5,5))
+            .attr("fill", "none")
+            .attr("stroke", 'black')
+
+        // svg.append("polyline")
+        //     .attr("points", "0,100 50,25 50,75 100,0")
+        //     .attr("fill", "none")
+        //     .attr("stroke", 'black')
+
+    // svg.append("path")
+        // .attr("class", "line")
+        // .attr("d", lineFunction(data));
+
+        // Add the X Axis
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height/2 + ")")
+            .call(xAxis);
+
+        // Add the Y Axis
+        svg.append("g")
+            .attr("class", "y axis")
+            .attr("transform", "translate(" + width/2 + ",0)")
+            .call(yAxis);
+        
+    }
+)
+
+</script>
+</body>
+</html>
