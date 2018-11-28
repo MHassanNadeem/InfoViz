@@ -1,4 +1,5 @@
 <!-- https://github.com/d3/d3/blob/master/CHANGES.md -->
+<!-- https://stackoverflow.com/questions/29785238/d3-difference-between-ordinal-and-linear-scales -->
 
 <!DOCTYPE html> 
 <html>
@@ -18,10 +19,12 @@
 	</svg> -->
 	
 <script type="text/javascript">
+// Global Variables
+var data = null;
 
 
 // Set the dimensions of the canvas / graph
-var margin = {top: 30, right: 30, bottom: 30, left: 30},
+var margin = {top: 10, right: 10, bottom: 10, left: 10},
     width = 500 - margin.left - margin.right,
     height = 600 - margin.top - margin.bottom;
 
@@ -89,10 +92,17 @@ function getPolyLine(a,b,c,d){
     return line
 }
 
+colormap = d3.scaleOrdinal(d3.schemeCategory10);
+function getColor(x){
+    return colormap(x);
+}
+
 d3.csv("data_full.csv").then(
 // d3.csv("data.csv").then(
-    function(data){
+    function(csv_data){
+        data = csv_data;
         console.log(data);
+        console.log( getColor() );
 
         y_min = -d3.max(data, d => +d.Deccel_Measure)
         y_max = d3.max(data, d =>  +d.Accel_Measure)
@@ -104,55 +114,10 @@ d3.csv("data_full.csv").then(
         x_abs = Math.max( Math.abs(x_min), Math.abs(x_max) )
         x.domain([-x_abs, x_abs])
 
-        console.log( -d3.max(data, d => +d.Deccel_Measure) )
-        console.log( d3.max(data, d =>  +d.Accel_Measure) )
+        // console.log( -d3.max(data, d => +d.Deccel_Measure) )
+        // console.log( d3.max(data, d =>  +d.Accel_Measure) )
 
-        // Scale the range of the data
-        // x.domain(d3.extent(data, function(d) { return d.CollegeGrad; }));
-        // y.domain([0, d3.max(data, function(d) { return d.close; })]);
-
-        // svg.append("polyline")
-        //     .attr("points", getPolyLine(10,10,10,10))
-        //     .attr("fill", "none")
-        //     .attr("stroke", 'black')
-
-        svg.selectAll("polyline")
-        .data(data)
-        .enter()
-        .append("polyline")
-            .attr("points", data => getPolyLine(+data.Accel_Measure, +data.LatPos_Measure, +data.Deccel_Measure, +data.LatNeg_Measure))
-            .attr("fill", "none")
-            .attr("stroke", 'black')
-            .attr('opacity', 0.1)
-            .attr('stroke-width', 0.5)
-			.on('mouseover', function(node){
-                console.log('Mouse Over')
-                d3.select(this)
-                .attr("stroke", 'red')
-                .attr('opacity', 0.5)
-                .attr('stroke-width', 1)
-				// d3.select(this).classed("highlight", true);
-				// d3.select("#detail").html(node.Born)
-            })
-			.on('mouseout', function(node){
-                d3.select(this)
-                .attr("stroke", 'black')
-                .attr('opacity', 0.1)
-                .attr('stroke-width', 0.5)
-			})
-
-    //             svg.selectAll("dot")
-    //     .data(data)
-    //   .enter().append("circle")
-    //     .attr("r", 3.5)
-    //     .attr("cx", d => mapX(d.Accel_Measure))
-    //     .attr("cy", d => mapX(d.Accel_Measure));
-
-
-        // svg.append("circle")
-        //     .attr("r", 5)
-        //     .attr("cx", mapX( 0 ))
-        //     .attr("cy", mapY( -6 ));
+        readFormRender(data);
 
         // Add the X Axis
         svg.append("g")
@@ -165,10 +130,122 @@ d3.csv("data_full.csv").then(
             .attr("class", "y axis")
             .attr("transform", "translate(" + width/2 + ",0)")
             .call(yAxis);
+
+        // Draw Legend
+        var legend = svg.selectAll(".legend")
+            .data(colormap.domain())
+            .enter().append("g")
+            .attr("class", "legend")
+            .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+        // draw legend colored rectangles
+        legend.append("rect")
+            .attr("x", width - 18)
+            .attr("width", 18)
+            .attr("height", 18)
+            .style("fill", colormap);
+
+        // draw legend text
+        legend.append("text")
+            .attr("x", width - 24)
+            .attr("y", 9)
+            .attr("dy", ".35em")
+            .style("text-anchor", "end")
+            .text(function(d) { return d;})
         
     }
 )
 
+function render(data){
+    var g = svg.selectAll("polyline")
+        .data(data)
+        .enter()
+        .append("g")
+
+        g.append("polyline")
+            .attr("points", data => getPolyLine(+data.Accel_Measure, +data.LatPos_Measure, +data.Deccel_Measure, +data.LatNeg_Measure))
+            .attr("fill", "none")
+            .attr("stroke", data => getColor(data.Gender))
+            .attr('opacity', 0.1)
+            .attr('stroke-width', 0.5)
+            .on('mouseover', function(node){
+                console.log('Mouse Over')
+                d3.select(this)
+                .attr("stroke", 'red')
+                .attr('opacity', 0.5)
+                .attr('stroke-width', 1)
+                // d3.select(this).classed("highlight", true);
+                // d3.select("#detail").html(node.Born)
+            })
+            .on('mouseout', function(node){
+                d3.select(this)
+                .attr("stroke", 'black')
+                .attr('opacity', 0.1)
+                .attr('stroke-width', 0.5)
+            });
+
+        g.append("polyline")
+            .attr("points", data => getPolyLine(+data.Accel_Measure, +data.LatPos_Measure, +data.Deccel_Measure, +data.LatNeg_Measure))
+            .attr("fill", "none")
+            .attr("stroke", 'red')
+            .attr('opacity', 0)
+            .attr('stroke-width', 3)
+            .on('mouseover', function(node){
+                d3.select(this)
+                .attr('opacity', 0.5)
+            })
+            .on('mouseout', function(node){
+                d3.select(this)
+                // .attr("stroke", 'black')
+                .attr('opacity', 0)
+                // .attr('stroke-width', 0.5)
+            });
+}
+
+function readFormRender() {
+    var form = new FormData(document.getElementById("myForm"));
+
+    gender = form.getAll('GenderChoices')
+    age = form.getAll('AgeChoices')
+    color = form.get('color')
+
+    console.log( gender )
+    console.log( age )
+    console.log( color )
+
+    render(data);
+}
+
 </script>
+
+<div class="control-group">
+      <form id="myForm" action="/action_page.php">
+        <fieldset>
+        <legend>Gender:</legend>
+        <input type="checkbox" name="GenderChoices" value="Male" checked>Male
+        <input type="checkbox" name="GenderChoices" value="Female" checked>Female
+        <input type="checkbox" name="GenderChoices" value="Did not specify" checked>Did not specify
+        <br>
+       </fieldset>
+        
+        <fieldset>
+        <legend>Color Channel:</legend>
+          <input type="radio" value="Gender" name="color" checked>Gender<br>
+          <input type="radio" value="LocationCode" name="color">Location<br>
+          <input type="radio" value="VehicleClass" name="color">Vehicle Class<br>
+          <input type="radio" value="AgeRange" name="color">Age<br>
+        </fieldset>
+        
+        <fieldset>
+        <legend>Age Group:</legend>
+        <input type="checkbox" name="AgeChoices" value="16-19" checked>16-19
+        <input type="checkbox" name="AgeChoices" value="20-24" checked>20-24
+        <br>
+       </fieldset>
+        
+        <input type="button" value="Submit" onclick="readFormRender()">
+      </form>
+</div>
+
 </body>
 </html>
