@@ -1,4 +1,6 @@
 <!-- https://github.com/d3/d3/blob/master/CHANGES.md -->
+<!-- http://bl.ocks.org/weiglemc/6185069 -->
+<!-- http://bl.ocks.org/d3noob/38744a17f9c0141bcd04 -->
 <!-- https://stackoverflow.com/questions/29785238/d3-difference-between-ordinal-and-linear-scales -->
 
 <!DOCTYPE html> 
@@ -21,7 +23,7 @@
 <script type="text/javascript">
 // Global Variables
 var data = null;
-
+var colormap = d3.scaleOrdinal(d3.schemeCategory10);
 
 // Set the dimensions of the canvas / graph
 var margin = {top: 10, right: 10, bottom: 10, left: 10},
@@ -92,17 +94,11 @@ function getPolyLine(a,b,c,d){
     return line
 }
 
-colormap = d3.scaleOrdinal(d3.schemeCategory10);
-function getColor(x){
-    return colormap(x);
-}
-
 d3.csv("data_full.csv").then(
 // d3.csv("data.csv").then(
     function(csv_data){
         data = csv_data;
         console.log(data);
-        console.log( getColor() );
 
         y_min = -d3.max(data, d => +d.Deccel_Measure)
         y_max = d3.max(data, d =>  +d.Accel_Measure)
@@ -129,10 +125,59 @@ d3.csv("data_full.csv").then(
         svg.append("g")
             .attr("class", "y axis")
             .attr("transform", "translate(" + width/2 + ",0)")
-            .call(yAxis);
+            .call(yAxis);        
+    }
+)
+
+function render(data, color){
+    colormap = d3.scaleOrdinal(d3.schemeCategory10);
+
+    svg.selectAll('.plot').remove();
+    var plot = svg.append("g").attr("class", "plot");
+
+    var g = plot.selectAll("plot")
+        .data(data)
+        .enter()
+        .append("g")
+
+        g.append("polyline")
+            .attr("points", data => getPolyLine(+data.Accel_Measure, +data.LatPos_Measure, +data.Deccel_Measure, +data.LatNeg_Measure))
+            .attr("fill", "none")
+            .attr("stroke", data => colormap(data[color]))
+            .attr('opacity', 0.5)
+            .attr('stroke-width', 0.5)
+            // .on('mouseover', function(node){
+            //     console.log('Mouse Over')
+            //     d3.select(this)
+            //     .attr("stroke", 'red')
+            //     .attr('opacity', 0.5)
+            //     .attr('stroke-width', 1)
+            // })
+            // .on('mouseout', function(node){
+            //     d3.select(this)
+            //     .attr("stroke", 'black')
+            //     .attr('opacity', 0.1)
+            //     .attr('stroke-width', 0.5)
+            // });
+
+        // Highlight
+        g.append("polyline")
+            .attr("points", data => getPolyLine(+data.Accel_Measure, +data.LatPos_Measure, +data.Deccel_Measure, +data.LatNeg_Measure))
+            .attr("fill", "none")
+            .attr("stroke", data => colormap(data[color]))
+            .attr('opacity', 0)
+            .attr('stroke-width', 4)
+            .on('mouseover', function(node){
+                d3.select(this)
+                .attr('opacity', 0.9)
+            })
+            .on('mouseout', function(node){
+                d3.select(this)
+                .attr('opacity', 0)
+            });
 
         // Draw Legend
-        var legend = svg.selectAll(".legend")
+        var legend = plot.selectAll(".legend")
             .data(colormap.domain())
             .enter().append("g")
             .attr("class", "legend")
@@ -151,69 +196,61 @@ d3.csv("data_full.csv").then(
             .attr("y", 9)
             .attr("dy", ".35em")
             .style("text-anchor", "end")
-            .text(function(d) { return d;})
-        
-    }
-)
-
-function render(data){
-    var g = svg.selectAll("polyline")
-        .data(data)
-        .enter()
-        .append("g")
-
-        g.append("polyline")
-            .attr("points", data => getPolyLine(+data.Accel_Measure, +data.LatPos_Measure, +data.Deccel_Measure, +data.LatNeg_Measure))
-            .attr("fill", "none")
-            .attr("stroke", data => getColor(data.Gender))
-            .attr('opacity', 0.1)
-            .attr('stroke-width', 0.5)
-            .on('mouseover', function(node){
-                console.log('Mouse Over')
-                d3.select(this)
-                .attr("stroke", 'red')
-                .attr('opacity', 0.5)
-                .attr('stroke-width', 1)
-                // d3.select(this).classed("highlight", true);
-                // d3.select("#detail").html(node.Born)
-            })
-            .on('mouseout', function(node){
-                d3.select(this)
-                .attr("stroke", 'black')
-                .attr('opacity', 0.1)
-                .attr('stroke-width', 0.5)
-            });
-
-        g.append("polyline")
-            .attr("points", data => getPolyLine(+data.Accel_Measure, +data.LatPos_Measure, +data.Deccel_Measure, +data.LatNeg_Measure))
-            .attr("fill", "none")
-            .attr("stroke", 'red')
-            .attr('opacity', 0)
-            .attr('stroke-width', 3)
-            .on('mouseover', function(node){
-                d3.select(this)
-                .attr('opacity', 0.5)
-            })
-            .on('mouseout', function(node){
-                d3.select(this)
-                // .attr("stroke", 'black')
-                .attr('opacity', 0)
-                // .attr('stroke-width', 0.5)
-            });
+            .text( d => d);
 }
 
 function readFormRender() {
     var form = new FormData(document.getElementById("myForm"));
 
-    gender = form.getAll('GenderChoices')
-    age = form.getAll('AgeChoices')
+    genders = form.getAll('GenderChoices')
+    ages = form.getAll('AgeChoices')
+    vecicles = form.getAll('VehicleChoices')
+    locations = form.getAll('LocChoices')
     color = form.get('color')
 
-    console.log( gender )
-    console.log( age )
-    console.log( color )
+    function filter_func(elem){
+        var match = 0;
+        for (i = 0; i < genders.length; i++) {
+            if((elem.Gender === genders[i])){
+                match++;
+                break;
+            }
+        }
 
-    render(data);
+        if(match != 1) return false;
+
+        for (i = 0; i < vecicles.length; i++) {
+            if((elem.VehicleClass === vecicles[i])){
+                match++;
+                break;
+            }
+        }
+
+        if(match != 2) return false;
+
+        for (i = 0; i < locations.length; i++) {
+            if((elem.LocationCode === locations[i])){
+                match++;
+                break;
+            }
+        }
+
+        if(match != 3) return false;
+
+        return true;
+    }
+
+    filtered_data = data.filter( e => filter_func(e) );
+
+    // console.log(filtered_data)
+
+    // console.log( genders )
+    // console.log( locations )
+    // console.log( vecicles )
+    // console.log( ages )
+    // console.log( color )
+
+    render(filtered_data, color);
 }
 
 </script>
@@ -227,6 +264,34 @@ function readFormRender() {
         <input type="checkbox" name="GenderChoices" value="Did not specify" checked>Did not specify
         <br>
        </fieldset>
+
+       <fieldset>
+        <legend>Locations:</legend>
+        <input type="checkbox" name="LocChoices" value="Indiana" checked>Indiana
+        <input type="checkbox" name="LocChoices" value="North Carolina" checked>North Carolina
+        <input type="checkbox" name="LocChoices" value="Florida" checked>Florida
+        <input type="checkbox" name="LocChoices" value="New York" checked>New York
+        <input type="checkbox" name="LocChoices" value="Pennsylvania" checked>Pennsylvania
+        <input type="checkbox" name="LocChoices" value="Washington" checked>Washington
+        <br>
+       </fieldset>
+
+       <fieldset>
+        <legend>Vehicle Class:</legend>
+        <input type="checkbox" name="VehicleChoices" value="Car" checked>Car
+        <input type="checkbox" name="VehicleChoices" value="SUV/Crossover" checked>SUV/Crossover
+        <input type="checkbox" name="VehicleChoices" value="Van/Minivan" checked>Van/Minivan
+        <input type="checkbox" name="VehicleChoices" value="Pickup" checked>Pickup
+        <br>
+       </fieldset> 
+
+
+       <fieldset>
+        <legend>Age Group:</legend>
+        <input type="checkbox" name="AgeChoices" value="16-19" checked>16-19
+        <input type="checkbox" name="AgeChoices" value="20-24" checked>20-24
+        <br>
+       </fieldset>
         
         <fieldset>
         <legend>Color Channel:</legend>
@@ -235,13 +300,6 @@ function readFormRender() {
           <input type="radio" value="VehicleClass" name="color">Vehicle Class<br>
           <input type="radio" value="AgeRange" name="color">Age<br>
         </fieldset>
-        
-        <fieldset>
-        <legend>Age Group:</legend>
-        <input type="checkbox" name="AgeChoices" value="16-19" checked>16-19
-        <input type="checkbox" name="AgeChoices" value="20-24" checked>20-24
-        <br>
-       </fieldset>
         
         <input type="button" value="Submit" onclick="readFormRender()">
       </form>
