@@ -3,6 +3,10 @@
 var data = null;
 var colormap = d3.scaleOrdinal(d3.schemeCategory10);
 
+function removeSpaces(str){
+    return str.replace(/\s/g, '');
+}
+
 var tooltip = d3.select("body").append("div")
     .attr("class", "tooltip")
     .style("opacity", 0);
@@ -121,6 +125,7 @@ function render(data, color){
         .data(data, d => d.DRIVER_ID)
         .enter()
         .append("g")
+        .attr("class", data => removeSpaces(data[color]))
 
         g.append("polyline")
             .attr("points", data => getPolyLine(+data.Accel_Measure, +data.LatPos_Measure, +data.Deccel_Measure, +data.LatNeg_Measure))
@@ -168,8 +173,10 @@ function render(data, color){
             .attr("class", "legend")
             .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; })
             .on('click', function(d){
-                console.log(d);
-                d3.select(this).classed("greyedout", true);
+                var oldState = d3.select(this).classed("greyedout");
+                var newState = !oldState;
+                d3.select(this).classed("greyedout", newState);
+                d3.selectAll('.' + removeSpaces(d)).classed("greyedoutlines", newState);
             });
 
         // draw legend colored rectangles
