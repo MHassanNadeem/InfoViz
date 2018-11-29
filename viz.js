@@ -22,14 +22,14 @@ d3.selection.prototype.moveToFront = function() {
 
 // Set the dimensions of the canvas / graph
 var margin = {top: 10, right: 10, bottom: 10, left: 10},
-    width = 700 - margin.left - margin.right,
-    height = 600 - margin.top - margin.bottom;
+    width = 800 - margin.left - margin.right,
+    height = 700 - margin.top - margin.bottom;
 
 var x = d3.scaleLinear().range([0, width]);
 var y = d3.scaleLinear().range([height, 0]);
 
-var xAxis = d3.axisBottom(x).ticks(10);
-var yAxis = d3.axisLeft(y).ticks(10);
+var xAxis = d3.axisBottom(x).ticks(15);
+var yAxis = d3.axisLeft(y).ticks(15);
 
 
 function mapX(p){
@@ -171,12 +171,40 @@ function render(data, color){
             .data(colormap.domain())
             .enter().append("g")
             .attr("class", "legend")
+            .attr("id", d => removeSpaces(d))
             .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; })
             .on('click', function(d){
                 var oldState = d3.select(this).classed("greyedout");
                 var newState = !oldState;
                 d3.select(this).classed("greyedout", newState);
                 d3.selectAll('.' + removeSpaces(d)).classed("greyedoutlines", newState);
+            })
+            .on('dblclick', function(d){
+                // var oldState = d3.select(this).classed("greyedout");
+                var domain = colormap.domain();
+                var greyOthers = true;
+
+                for(var i = 0; i<domain.length; i++){
+                    if(domain[i] != d){
+                    if( d3.select('#' + removeSpaces(domain[i])).classed("greyedout") ){
+                        console.log("other gred out")
+                        greyOthers = false;
+                        break;
+                    }
+                    }
+                }
+
+                for(var i = 0; i<domain.length; i++){
+                    if(domain[i] == d){
+                        d3.selectAll('.' + removeSpaces(domain[i])).classed("greyedoutlines", !greyOthers);
+                        d3.select('#' + removeSpaces(domain[i])).classed("greyedout", !greyOthers);
+                    }else{
+                        d3.selectAll('.' + removeSpaces(domain[i])).classed("greyedoutlines", greyOthers);
+                        d3.select('#' + removeSpaces(domain[i])).classed("greyedout", greyOthers);
+                    }
+                }
+
+                // console.log( legend )
             });
 
         // draw legend colored rectangles

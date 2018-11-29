@@ -13,9 +13,13 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
 	<script src="https://d3js.org/d3.v5.min.js"></script>
-	<style type="text/css">
+    <style type="text/css">
+        html,body {
+            height: 100%;
+        }
+        
         .greyedout{
-            opacity: 0.2;
+            opacity: 0.3;
         }
 
         .greyedoutlines{
@@ -50,13 +54,12 @@
 	</style>
 </head>
 
-<!-- min-width: 700px; -->
-
 <body>
-<div class="container-fluid">
-    <div class="row">
-        <div id="svgcolumn" class="col-sm-7 img-fluid" style="background-color:white;"></div>
-        <div class="col-sm-5" style="background-color:rgb(248, 248, 248);">
+<div class="container-fluid h-100">
+    Team: g-force
+    <div class="row h-100">
+        <div id="svgcolumn" class="col-sm-7 img-fluid h-100" style="background-color:white;"></div>
+        <div class="col-sm-5 h-100" style="background-color:rgb(248, 248, 248);">
             <div class="control-group">
                 <form id="myForm" action="/action_page.php">
                 <div class="form-group">
@@ -106,7 +109,9 @@
                   </fieldset>
                   
                   <br>
-                  <input type="button" value="Submit" onclick="readFormRender()">
+                  <div>
+                    <input type="button" value="Submit" onclick="readFormRender()">
+                  </div>
                 </form>
           </div>
         </div>
