@@ -7,11 +7,19 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
-	<title>D3 Template</title>
+	<title>g-force Info Viz</title>
 	<script src="https://d3js.org/d3.v5.min.js"></script>
 	<style type="text/css">
         .highlight{
             fill: red;
+        }
+
+        .tooltip {
+            position: absolute;
+            background-color: rgb(232, 233, 195);
+            /* width: 200px; */
+            /* height: 28px; */
+            pointer-events: none;
         }
 	</style>
 </head>
@@ -24,6 +32,10 @@
 // Global Variables
 var data = null;
 var colormap = d3.scaleOrdinal(d3.schemeCategory10);
+
+var tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
 
 // Set the dimensions of the canvas / graph
 var margin = {top: 10, right: 10, bottom: 10, left: 10},
@@ -113,7 +125,7 @@ d3.csv("data_full.csv").then(
         // console.log( -d3.max(data, d => +d.Deccel_Measure) )
         // console.log( d3.max(data, d =>  +d.Accel_Measure) )
 
-        readFormRender(data);
+        // readFormRender(data);
 
         // Add the X Axis
         svg.append("g")
@@ -125,7 +137,9 @@ d3.csv("data_full.csv").then(
         svg.append("g")
             .attr("class", "y axis")
             .attr("transform", "translate(" + width/2 + ",0)")
-            .call(yAxis);        
+            .call(yAxis);       
+        
+        readFormRender(data);
     }
 )
 
@@ -145,7 +159,7 @@ function render(data, color){
             .attr("fill", "none")
             .attr("stroke", data => colormap(data[color]))
             .attr('opacity', 0.5)
-            .attr('stroke-width', 0.5)
+            .attr('stroke-width', 1)
             // .on('mouseover', function(node){
             //     console.log('Mouse Over')
             //     d3.select(this)
@@ -167,13 +181,25 @@ function render(data, color){
             .attr("stroke", data => colormap(data[color]))
             .attr('opacity', 0)
             .attr('stroke-width', 4)
-            .on('mouseover', function(node){
+            .on('mouseover', function(d){
                 d3.select(this)
                 .attr('opacity', 0.9)
+
+                tooltip.transition()
+                    .duration(1000)
+                    .style("opacity", .9);
+                tooltip.html(d.Gender + ' - ' + d.LocationCode + "<br/>"
+                    + d.VehicleClass + ' - ' + d.AgeRange)
+                    .style("left", (d3.event.pageX + 15) + "px")
+                    .style("top", (d3.event.pageY - 28) + "px");
             })
             .on('mouseout', function(node){
                 d3.select(this)
                 .attr('opacity', 0)
+
+                tooltip.transition()
+                    .duration(500)
+                    .style("opacity", 0);
             });
 
         // Draw Legend
