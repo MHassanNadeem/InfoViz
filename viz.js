@@ -4,7 +4,7 @@ var data = null;
 var colormap = d3.scaleOrdinal(d3.schemeCategory10);
 
 function removeSpaces(str){
-    return str.replace(/\s/g, '');
+    return str.replace(/\s|\/|-/g, '');
 }
 
 var tooltip = d3.select("body").append("div")
